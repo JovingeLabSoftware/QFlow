@@ -26,7 +26,7 @@ shinyServer(function(input, output) {
     
     print(inFile)
     str(inFile)
-    data <- read.FCS(inFile$name, column.pattern = "^[FS0-9][S0-9]")
+    data <- read.FCS(inFile$datapath, column.pattern = "^[FS0-9][S0-9]")
     
     p1 <- colnames(data)[3]
     p2 <- colnames(data)[4]
