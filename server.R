@@ -24,7 +24,9 @@ shinyServer(function(input, output) {
     if (is.null(inFile))
       return(NULL)
     
-    data <- read.FCS("test_1.FCS", column.pattern = "^[FS0-9][S0-9]")
+    print(inFile)
+    str(inFile)
+    data <- read.FCS(inFile$name, column.pattern = "^[FS0-9][S0-9]")
     
     p1 <- colnames(data)[3]
     p2 <- colnames(data)[4]
