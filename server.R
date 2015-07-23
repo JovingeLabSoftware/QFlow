@@ -18,7 +18,7 @@ shinyServer(function(input, output) {
     if (is.null(inFile))
       return(NULL)
     data <- read.FCS(inFile$datapath, column.pattern = "^[FS0-9][S0-9]")
-    par(mfrow=c(2,3), cex=0.7, mar=c(5,5,0,0))
+    par(mfrow=c(2,3), cex=0.7, mar=c(5,5,,0))
     plotPair('SSC', 'FSC', data)    
     plotPair('530/40', '580/30', data)    
     plotPair('460/50', '670/30', data)    
