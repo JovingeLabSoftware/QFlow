@@ -9,6 +9,10 @@ library(shiny)
 
 shinyUI(fluidPage(
   titlePanel("Upload QC Files"),
+  tagList(
+    singleton(tags$head(tags$script(src='//cdn.datatables.net/1.10.2/js/jquery.dataTables.js',type='text/javascript'))),
+    singleton(tags$head(tags$script(src='//cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css',type='text/css')))
+  ),
   sidebarLayout(
     sidebarPanel(
       fileInput('file1', 'Choose FCS File',
@@ -18,7 +22,9 @@ shinyUI(fluidPage(
       tags$hr()
     ),
     mainPanel(
-      plotOutput("FL1")
+      plotOutput("FL1"),
+      dataTableOutput("results")
+      #dataTableOutput('mytable')
     )
   )
 ))
