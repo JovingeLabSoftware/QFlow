@@ -18,7 +18,7 @@ shinyServer(function(input, output) {
     if (is.null(inFile))
       return(NULL)
     data <- read.FCS(inFile$datapath, column.pattern = "^[FS0-9][S0-9]")
-    par(mfrow=c(2,3), cex=0.7, mar=c(5,5,,0))
+    par(mfrow=c(2,3), cex=0.7, mar=c(5,5,1,0))
     plotPair('SSC', 'FSC', data)    
     plotPair('530/40', '580/30', data)    
     plotPair('460/50', '670/30', data)    
@@ -29,13 +29,40 @@ shinyServer(function(input, output) {
     plotPair('750', '710/50', data)    
   })  
 
+  output$history <- renderPlot({
+    load("data.rda")
+    matplot(x=matrix(1:ncol(rcv)), y=t(rcv), type='l', col=rainbow(12), 
+          lty=1, ylim=c(0,.2), 
+          xlab="date", 
+          ylab="RCV",
+          cex.lab = 0.7, font.lab = 2, 
+          axes=FALSE)
+    legend(x="topleft", legend = rownames(rcv), lty=1, col=rainbow(12), box.lty = 0, cex=0.5, ncol = 2)
+    axis(2, cex.axis=0.5, las=1)
+    axis(1, labels = colnames(rcv), at=1:ncol(rcv), cex.axis=0.5, las=1)
+    box()    
+  })
+
   output$results <- renderDataTable({
     inFile <- input$file1    
     if (is.null(inFile))
       return(NULL)
     data <- read.FCS(inFile$datapath, column.pattern = "^[FS0-9][S0-9]")
-    stats <- statsPair('530/40', '580/30', data)
-    as.data.frame(t(round(stats, 3)))
+    stats <- statsPair('SSC', 'FSC', data)
+    stats <- rbind(stats, statsPair('530/40', '580/30', data))
+    stats <- rbind(stats, statsPair('460/50', '670/30', data))
+    stats <- rbind(stats, statsPair('610/20', '585/29', data))
+    stats <- rbind(stats, statsPair('710/50', '670/30 \\(561', data))
+    stats <- rbind(stats, statsPair('750', '710/50', data))
+    stats <- stats[-12,] # duplicate 710/50
+    load("data.rda")
+    rcv <- cbind(rcv, stats[,-1])
+    colnames(rcv)[ncol(rcv)] <- gsub(".*?\\s(.*?\\s.*?)\\s.*", "\\1", date())
+    save(rcv, file="data.rda")
+    stats <- cbind(rownames(stats), round(stats, 3))
+    colnames(stats)[1] <- "Parameter"
+
+    as.data.frame(stats)
   }, options = list(paging = FALSE, searching=FALSE))
   
 })
@@ -81,17 +108,15 @@ statsPair <- function(a, b, data) {
   xy <- exprs(s1[[1]])
     
   # stats
-  ssc.rcv <- abs(IQR(xy[,'SSC'])) * 0.7413 / median(xy[,'SSC'])
-  fsc.rcv <- abs(IQR(xy[,'FSC'])) * 0.7413 / median(xy[,'FSC'])
-  a.rcv <- abs(IQR(xy[,a])) * 0.7413 / median(xy[,a])
-  b.rcv <- abs(IQR(xy[,b])) * 0.7413 / median(xy[,b])
-  ssc.med <- median(xy[,'SSC'])
-  fsc.med <- median(xy[,'FSC'])
+  a.rcv <- 100 * abs(IQR(xy[,a])) * 0.7413 / median(xy[,a])
+  b.rcv <- 100 * abs(IQR(xy[,b])) * 0.7413 / median(xy[,b])
   a.med <- median(xy[,a])
   b.med <- median(xy[,b])
-  
-  res <- c(ssc.med, fsc.med, a.med, b.med, ssc.rcv, fsc.rcv, a.rcv, b.rcv)
-  names(res) <- c('SSC med', 'FSC med', paste(a.l, 'med'), paste('b.l', 'med'), 
-                  'SSC RCV', 'FSC RCV', paste(a.l, 'RCV'), paste('b.l', 'RCV'))
+  res <- matrix(c(a.med, b.med, a.rcv, b.rcv), ncol=2)
+  colnames(res) <- c("median", "RCV") 
+  rownames(res) <- c(a.l, b.l)
+#  res <- c(a.med, b.med, a.rcv, b.rcv)
+#  names(res) <- c(paste(a.l, 'med'), paste(b.l, 'med'), 
+#                  paste(a.l, 'RCV'), paste(b.l, 'RCV'))
   return(res)
 }
