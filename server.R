@@ -66,7 +66,7 @@ shinyServer(function(input, output, session) {
           ylab="RCV",
           cex.lab = 0.7, font.lab = 2, 
           axes=FALSE)
-    legend(x="topleft", legend = rownames(rcv), lty=1, col=rainbow(12), box.lty = 0, cex=0.7, ncol = 3)
+    legend(x="topleft", legend = rownames(rcv), lty=1, col=rainbow(16), box.lty = 0, cex=0.7, ncol = 3)
     axis(2, cex.axis=0.5, las=1)
     #axis(1, labels = colnames(rcv), at=1:ncol(rcv), cex.axis=0.7, las=1)
     text(x=c(1:ncol(rcv)), par("usr")[3] - 0.2, labels = gsub("[a-zA-Z_]", "", colnames(rcv)), srt = 45, cex=0.7,  pos = 2, xpd = TRUE)
@@ -94,9 +94,9 @@ shinyServer(function(input, output, session) {
     stats <- statsPair('SSC', 'FSC', data)
     #if UV dataset present, verify which filter set in use
     if(UV && length(grep('460/50 \\(355', names(dataUV)))) {
-      stats <- rbind(stats, statsPair('460/50 \\(355', '670/30 \\(355', data))
+      stats <- rbind(stats, statsPair('460/50 \\(355', '670/30 \\(355', dataUV))
     } else if (UV) {
-      stats <- rbind(stats, statsPair('379/34 \\(355', '670/30 \\(355', data))
+      stats <- rbind(stats, statsPair('379/34 \\(355', '670/30 \\(355', dataUV))
     }
     stats <- rbind(stats, statsPair('520/35 \\(405', '460/50 \\(405', data))
 
