@@ -111,7 +111,7 @@ shinyServer(function(input, output, session) {
     stats <- stats[-which(duplicated(row.names(stats))),]
     
     rcv <- read.csv(file = "rcv.csv", header = TRUE, row.names=1, check.names=FALSE, as.is=TRUE)
-    cn <- gsub(".*?([0123456789_]+).*", "\\1", input$file1[1,1])     
+    cn <- gsub("_$", "", gsub(".*?([0123456789_-]{6,8}).*_00[12].fcs", "\\1", input$file1[1,1]))     
     if(!(cn %in% colnames(rcv))) {
       rcv <- cbind(rcv, stats[,-1])
       colnames(rcv)[ncol(rcv)] <- cn
