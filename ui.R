@@ -10,23 +10,25 @@ library(shiny)
 
 shinyUI(fixedPage(
   fixedRow(
-    column(3,
-           fileInput('file1', 'Choose FCS File',
+    column(12, tag('br', ""))),
+  fixedRow(
+    column(4,
+           fileInput('file1', 'FCS Files (w/ &w/o UV)', multiple=TRUE,
                      accept=c('text/csv', 
                               'text/comma-separated-values,text/plain', 
                               '.FCS', '.fcs')),
            tags$hr()
     ),
-    column(9,
+    column(8,
            h4("Historical data (select FCS file at left to add data)"),
            plotOutput("history", width='700px')
     )
   ),    
   fixedRow(
-    column(3,
+    column(4,
              ""
     ),
-    column(9,
+    column(8,
            h4("Diagnostic plots (select FCS file at left):"),
            plotOutput("FL1", width='700px'),
            div(dataTableOutput("results"), style = "font-size: 9px; width: 300px;")           

@@ -10,55 +10,113 @@ library(flowCore)
 library(flowViz)
 library(hexbin)
 
-shinyServer(function(input, output) {
-  data <- NULL
 
+
+shinyServer(function(input, output, session) {
+  data <- NULL
+  historical <- reactiveFileReader(1000, session, 'rcv.csv', read.csv,
+                                   header = TRUE, row.names=1, 
+                                   check.names=FALSE, as.is=TRUE)
+  
   output$FL1 <- renderPlot({
+    UV <- FALSE
     inFile <- input$file1    
     if (is.null(inFile))
       return(NULL)
-    data <- read.FCS(inFile$datapath, column.pattern = "^[FS0-9][S0-9]")
-    par(mfrow=c(2,3), cex=0.7, mar=c(5,5,1,0))
+
+    for(i in 1:nrow(inFile)) {
+      # QC is performed with and without UV laser (which blows everything else away).
+      # so find the file that contains the UV data and extract that separately
+      d <- read.FCS(inFile$datapath[i], column.pattern = "^[FS0-9][S0-9]")      
+      if(median(exprs(d)[,grep("355", names(d))]) > 5000) {
+        dataUV <- d
+        UV <- TRUE
+      } else {
+        data <- d
+      }
+    }
+    par(mfrow=c(3,3), cex=0.7, mar=c(5,5,1,0))
     plotPair('SSC', 'FSC', data)    
-    plotPair('530/40', '580/30', data)    
-    plotPair('460/50', '670/30', data)    
-    #Or
-    #379/34 (355), 670/30 (355)
-    plotPair('610/20', '585/29', data)    
-    plotPair('710/50', '670/30', data)    
-    plotPair('750', '710/50', data)    
-  })  
+    
+    #if UV dataset present, verify which filter set in use
+    if(UV && length(grep('460/50 \\(355', names(dataUV)))) {
+      plotPair('460/50 \\(355', '670/30 \\(355', dataUV)          
+    } else if (UV) {
+      plotPair('379/34 \\(355', '670/30 \\(355', dataUV)          
+    }
+
+    plotPair('520/35 \\(405', '460/50 \\(405', data)    
+    
+    plotPair('530/40 \\(488', '580/30 \\(488', data)    
+    
+    plotPair('610/20 \\(561', '585/29 \\(561', data)    
+    plotPair('710/50 \\(561', '670/30 \\(561', data)    
+    plotPair('750.* \\(561', '710/50 \\(561', data)    
+    
+    plotPair('720/40 \\(640', '670/30 \\(640', data)    
+    plotPair('750.* \\(640', '720/40 \\(640', data)    
+    
+    })  
 
   output$history <- renderPlot({
-    load("data.rda")
+    rcv <- historical()
     matplot(x=matrix(1:ncol(rcv)), y=t(rcv), type='l', col=rainbow(12), 
-          lty=1, ylim=c(0,10), 
+          lty=1, ylim=c(0,15), 
           xlab="date", 
           ylab="RCV",
           cex.lab = 0.7, font.lab = 2, 
           axes=FALSE)
-    legend(x="topleft", legend = rownames(rcv), lty=1, col=rainbow(12), box.lty = 0, cex=0.5, ncol = 2)
+    legend(x="topleft", legend = rownames(rcv), lty=1, col=rainbow(12), box.lty = 0, cex=0.7, ncol = 3)
     axis(2, cex.axis=0.5, las=1)
-    axis(1, labels = colnames(rcv), at=1:ncol(rcv), cex.axis=0.5, las=1)
+    #axis(1, labels = colnames(rcv), at=1:ncol(rcv), cex.axis=0.7, las=1)
+    text(x=c(1:ncol(rcv)), par("usr")[3] - 0.2, labels = gsub("[a-zA-Z_]", "", colnames(rcv)), srt = 45, cex=0.7,  pos = 2, xpd = TRUE)
     box()    
   })
 
   output$results <- renderDataTable({
+    UV <- FALSE
     inFile <- input$file1    
     if (is.null(inFile))
       return(NULL)
-    data <- read.FCS(inFile$datapath, column.pattern = "^[FS0-9][S0-9]")
+    
+    for(i in 1:nrow(inFile)) {
+      # QC is performed with and without UV laser (which blows everything else away).
+      # so find the file that contains the UV data and extract that separately
+      d <- read.FCS(inFile$datapath[i], column.pattern = "^[FS0-9][S0-9]")      
+      if(median(exprs(d)[,grep("355", names(d))]) > 5000) {
+        dataUV <- d
+        UV <- TRUE
+      } else {
+        data <- d
+      }
+    }
+    
     stats <- statsPair('SSC', 'FSC', data)
-    stats <- rbind(stats, statsPair('530/40', '580/30', data))
-    stats <- rbind(stats, statsPair('460/50', '670/30', data))
-    stats <- rbind(stats, statsPair('610/20', '585/29', data))
-    stats <- rbind(stats, statsPair('710/50', '670/30 \\(561', data))
-    stats <- rbind(stats, statsPair('750', '710/50', data))
-    stats <- stats[-12,] # duplicate 710/50
-    load("data.rda")
-    rcv <- cbind(rcv, stats[,-1])
-    colnames(rcv)[ncol(rcv)] <- gsub(".*?\\s(.*?\\s.*?)\\s.*", "\\1", date())
-    save(rcv, file="data.rda")
+    #if UV dataset present, verify which filter set in use
+    if(UV && length(grep('460/50 \\(355', names(dataUV)))) {
+      stats <- rbind(stats, statsPair('460/50 \\(355', '670/30 \\(355', data))
+    } else if (UV) {
+      stats <- rbind(stats, statsPair('379/34 \\(355', '670/30 \\(355', data))
+    }
+    stats <- rbind(stats, statsPair('520/35 \\(405', '460/50 \\(405', data))
+
+    stats <- rbind(stats, statsPair('530/40 \\(488', '580/30 \\(488', data))
+
+    stats <- rbind(stats, statsPair('610/20 \\(561', '585/29 \\(561', data))
+    stats <- rbind(stats, statsPair('710/50 \\(561', '670/30 \\(561', data))
+    stats <- rbind(stats, statsPair('750.* \\(561', '710/50 \\(561', data))
+
+    stats <- rbind(stats, statsPair('720/40 \\(640', '670/30 \\(640', data))
+    stats <- rbind(stats, statsPair('750.*\\(640', '720/40 \\(640', data))    
+    stats <- stats[-which(duplicated(row.names(stats))),]
+    
+    rcv <- read.csv(file = "rcv.csv", header = TRUE, row.names=1, check.names=FALSE, as.is=TRUE)
+    cn <- gsub(".*?([0123456789_]+).*", "\\1", input$file1[1,1])     
+    if(!(cn %in% colnames(rcv))) {
+      rcv <- cbind(rcv, stats[,-1])
+      colnames(rcv)[ncol(rcv)] <- cn
+      write.csv(rcv, file="rcv.csv")
+    }
     stats <- cbind(rownames(stats), round(stats, 3))
     colnames(stats)[1] <- "Parameter"
 
