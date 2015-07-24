@@ -18,6 +18,7 @@ shinyUI(fixedPage(
            tags$hr()
     ),
     column(9,
+           h4("Historical data (select FCS file at left to add data)"),
            plotOutput("history", width='700px')
     )
   ),    
@@ -26,6 +27,7 @@ shinyUI(fixedPage(
              ""
     ),
     column(9,
+           h4("Diagnostic plots (select FCS file at left):"),
            plotOutput("FL1", width='700px'),
            div(dataTableOutput("results"), style = "font-size: 9px; width: 300px;")           
     )

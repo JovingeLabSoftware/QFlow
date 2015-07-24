@@ -32,7 +32,7 @@ shinyServer(function(input, output) {
   output$history <- renderPlot({
     load("data.rda")
     matplot(x=matrix(1:ncol(rcv)), y=t(rcv), type='l', col=rainbow(12), 
-          lty=1, ylim=c(0,.2), 
+          lty=1, ylim=c(0,10), 
           xlab="date", 
           ylab="RCV",
           cex.lab = 0.7, font.lab = 2, 
