@@ -9,6 +9,12 @@ library(shiny)
 
 
 shinyUI(fixedPage(
+    
+  # header wrapper for lab site
+  includeHTML('www/header.html'),
+  HTML('<link href="shared/font-awesome/css/font-awesome.min.css" rel="stylesheet">'),
+
+
   fixedRow(
     column(12, tag('br', ""))),
   fixedRow(
@@ -33,5 +39,6 @@ shinyUI(fixedPage(
            plotOutput("FL1", width='700px'),
            div(dataTableOutput("results"), style = "font-size: 9px; width: 300px;")           
     )
-  )
+  ),
+  includeHTML('www/footer.html')
 ))
